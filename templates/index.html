@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>To-Do List</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            background: linear-gradient(to right, #ff7e5f, #feb47b);
+            color: white;
+        }
+        .container {
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 50px;
+        }
+        .list-group-item {
+            background-color: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+        }
+        .list-group-item-success {
+            background-color: #28a745 !important;
+        }
+        .btn-primary {
+            background-color: #ff7e5f;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #feb47b;
+        }
+        .btn-success {
+            background-color: #4caf50;
+            border: none;
+        }
+        .btn-success:hover {
+            background-color: #45a049;
+        }
+        .btn-danger {
+            background-color: #f44336;
+            border: none;
+        }
+        .btn-danger:hover {
+            background-color: #e53935;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-5 text-center">To-Do List</h1>
+        <form class="mt-3" action="{{ url_for('index') }}" method="post">
+            <div class="input-group mb-3">
+                <input type="text" class="form-control" name="content" placeholder="Добавить задачу" required>
+                <input type="date" class="form-control" name="deadline" placeholder="Выберите дату" required>
+                <div class="input-group-append">
+                    <button class="btn btn-primary" type="submit">Добавить</button>
+                </div>
+            </div>
+        </form>
+
+        <ul class="list-group">
+            {% for task in tasks %}
+                <li class="list-group-item {% if task.done %}list-group-item-success{% endif %}" id="task-{{ task.id }}">
+                    {{ task.content }} (до: {{ task.deadline.strftime('%Y-%m-%d') }})
+                    <span class="float-right">
+                        {% if not task.done %}
+                            <a href="{{ url_for('complete_task', id=task.id) }}" class="btn btn-sm btn-success complete-task" data-id="{{ task.id }}">Выполнено</a>
+                        {% endif %}
+                        <a href="{{ url_for('delete_task', id=task.id) }}" class="btn btn-sm btn-danger delete-task" data-id="{{ task.id }}">Удалить</a>
+                    </span>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <script>
+        document.querySelectorAll('.delete-task').forEach(button => {
+            button.addEventListener('click', function(event) {
+                event.preventDefault();
+                const taskId = button.getAttribute('data-id');
+                if (confirm('Вы уверены, что хотите удалить эту задачу?')) {
+                    window.location.href = `/delete/${taskId}`;
+                }
+            });
+        });
+
+        document.querySelectorAll('.complete-task').forEach(button => {
+            button.addEventListener('click', function(event) {
+                event.preventDefault();
+                const taskId = button.getAttribute('data-id');
+                fetch(`/complete/${taskId}`)
+                    .then(response => {
+                        if (response.ok) {
+                            document.getElementById(`task-${taskId}`).classList.add('list-group-item-success');
+                        }
+                    });
+            });
+        });
+    </script>
+</body>
+</html>
